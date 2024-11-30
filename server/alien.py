@@ -74,25 +74,22 @@ class Alien:
     def populate_information(self):
         information = json.loads(self.generate_information())
 
-        self.description = (
-            information["text-to-image"]
-            + " Make sure you only generate a single alien with their head in the center of the frame, do not include a background, or any other elements in the image."
-        )
+        self.description = information["text-to-image"]
         self.name = information["name"]
         self.species = information["species"]
         self.items = information["items"]
         self.demeanor = information["demeanor"]
 
-    def to_json(self):
+    def __str__(self):
         def convert(obj):
             if isinstance(obj, np.ndarray):
-                return obj.tolist()
+                return f"np.ndarray with shape {obj.shape}"
             return obj
 
         serializable_dict = dataclasses.asdict(
             self, dict_factory=lambda items: {k: convert(v) for k, v in items}
         )
-        return json.dumps(serializable_dict)
+        return json.dumps(serializable_dict, indent=4)
 
     def generate_art(self):
         if self.description is None:
@@ -100,7 +97,8 @@ class Alien:
 
         response = client.images.generate(
             model="dall-e-3",
-            prompt=self.description,
+            prompt=self.description
+            + " Make sure you only generate a single alien with their head in the center of the frame, do not include a background, or any other elements in the image.",
             size="1024x1024",
             quality="standard",
             n=1,
@@ -109,3 +107,9 @@ class Alien:
         res = requests.get(response.data[0].url)
         image = Image.open(io.BytesIO(res.content))
         self.art = np.array(image)
+
+
+if __name__ == "__main__":
+    a = Alien()
+    a.generate_art()
+    print(a.to_json())
