@@ -1,1 +1,1 @@
-# HS-GameJame-24
+# HS-GameJam-24
