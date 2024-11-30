@@ -11,7 +11,7 @@ import torch
 from openai import OpenAI
 from PIL import Image
 
-client = OpenAI(api_key=os.environ.get("OPENAI_AI_KEY"))
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 device = torch.device(
     "mps"
     if torch.backends.mps.is_available()
@@ -109,8 +109,3 @@ class Alien:
         res = requests.get(response.data[0].url)
         image = Image.open(io.BytesIO(res.content))
         self.art = np.array(image)
-
-
-if __name__ == "__main__":
-    a = Alien()
-    a.generate_art()
