@@ -129,7 +129,7 @@ class Alien:
             "demeanor": self.demeanor,
             "alien_id": self.alien_id,
         }
-        return json.dumps(tmp)
+        return json.dumps(tmp, ensure_ascii=False)
 
     def generate_art(self):
         if self.description is None:
