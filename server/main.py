@@ -36,7 +36,7 @@ def generate_artwork(id: str):
 def generate_alien():
     alien = Alien()
     aliens[alien.alien_id] = alien
-    res = json.dumps({"alien": alien.to_dict()}, ensure_ascii=False)
+    res = json.dumps(alien.to_dict(), ensure_ascii=False)
     return Response(res, content_type="application/json")
 
 
