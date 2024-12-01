@@ -4,7 +4,7 @@ from typing import List
 
 import requests
 from alien import Alien
-from flask import Flask, Response, abort, jsonify, request
+from flask import Flask, Response, abort, request
 from pydantic import BaseModel
 
 app = Flask(__name__)
@@ -27,14 +27,16 @@ def generate_artwork(id: str):
     image = alien.generate_art()
     image.save(f"{alien.alien_id}.png")
     alien.image_url = os.path.join(os.getcwd(), f"{alien.alien_id}.png")
-    return jsonify(str(alien))
+    return Response(
+        json.dumps(alien.to_dict(), ensure_ascii=False), content_type="application/json"
+    )
 
 
 @app.route("/generate-alien", methods=["GET"])
 def generate_alien():
     alien = Alien()
     aliens[alien.alien_id] = alien
-    res = json.dumps({"alien": str(alien)}, ensure_ascii=False)
+    res = json.dumps({"alien": alien.to_dict()}, ensure_ascii=False)
     return Response(res, content_type="application/json")
 
 

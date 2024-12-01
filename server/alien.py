@@ -118,6 +118,18 @@ class Alien:
         self.items = information["items"]
         self.demeanor = information["demeanor"]
 
+    def to_dict(self):
+        return {
+            "let_in": self.let_in,
+            "image_url": self.image_url,
+            "description": self.description,
+            "name": self.name,
+            "species": self.species,
+            "items": self.items,
+            "demeanor": self.demeanor,
+            "alien_id": self.alien_id,
+        }
+
     def __str__(self):
         tmp = {
             "let_in": self.let_in,
