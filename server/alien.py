@@ -135,6 +135,7 @@ class Alien:
         if self.description is None:
             self.populate_information()
 
+        print("Generating image")
         response = client.images.generate(
             model="dall-e-3",
             prompt=self.description
@@ -144,7 +145,9 @@ class Alien:
             n=1,
         )
 
+        print("Downloading")
         res = requests.get(response.data[0].url)
+        print("Converting to image")
         return Image.open(io.BytesIO(res.content))
 
 

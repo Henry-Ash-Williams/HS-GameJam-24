@@ -20,4 +20,5 @@ dependencies = [
     "sentencepiece>=0.2.0",
     "torch>=2.5.1",
     "transformers>=4.46.3",
+    "pandas>=2.2.3",
 ]
