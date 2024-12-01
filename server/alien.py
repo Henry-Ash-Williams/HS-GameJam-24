@@ -1,38 +1,74 @@
-import dataclasses
 import io
 import json
 import os
+import string
 from dataclasses import dataclass, field
 from typing import List, Optional
 
 import numpy as np
 import requests
-import torch
 from openai import OpenAI
 from PIL import Image
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-device = torch.device(
-    "mps"
-    if torch.backends.mps.is_available()
-    else "cuda"
-    if torch.cuda.is_available()
-    else "cpu"
-)
+
+NAMES = [
+    "Zorvynex",
+    "Krellithar",
+    "Thaloxa",
+    "Vyntrix",
+    "Omarak",
+    "Xilenth",
+    "Dravokar",
+    "Qelthori",
+    "Nyxora",
+    "Aztrion",
+    "Phorvix",
+    "Yraxal",
+    "Tzorrek",
+    "Lixavor",
+    "Chyrron",
+    "Uxiltra",
+    "Malkithis",
+    "Kronvaar",
+    "Zynarrax",
+    "Belthorax",
+    "Veltraxion",
+    "Korvethis",
+    "Xathorin",
+    "Pryllith",
+    "Zynquar",
+    "Droxelis",
+    "Lomaraen",
+    "Ultharek",
+    "Quaravex",
+    "Xylandor",
+    "Frylthara",
+    "Nymexis",
+    "Voktril",
+    "Chirvessa",
+    "Omralith",
+    "Zaruketh",
+    "Torvalis",
+    "Ekrizion",
+    "Sylthoran",
+    "Brethix",
+]
 
 
 SYSTEM_PROMPT = """
 You are a language model who is tasked with generating information about an alien. 
 
-These aliens are trying to enter a nightclub similar to berghain in berlin. You will always be told whether or not they should be allowed entry into this nightclub. 
+These aliens are trying to enter a nightclub similar to berghain in berlin. You will always be told whether or not they should be allowed entry into this nightclub, and their name. 
 
 These aliens will have a set of items on their person, this could include drugs, kink items, and other things people may bring with them to a nightclub. 
+
+Make sure you generate a diverse descriptions, giving something new everytime, and taking care not to generate similar descriptions in the same session.
 
 You must always respond in JSON, using the following schema: 
 
 {
     "text-to-image": [A physical description of the alien which is later fed into a text-to-image model, must not exceed 77 tokens], 
-    "name": [The name of the alien], 
     "species": [The species of the alien],
     "items": [A list of items the alien has on them],
     "demeanor": [How the alien acts while being interrogated by the bouncer],
@@ -45,20 +81,23 @@ class Alien:
     let_in: bool = field(
         default_factory=lambda: bool(np.random.choice([True, False], p=[0.75, 0.25]))
     )
-    art: Optional[np.ndarray] = None
+    image_url: Optional[str] = None
     description: Optional[str] = None
-    name: Optional[str] = None
+    name: str = field(default_factory=lambda: np.random.choice(NAMES))
     species: Optional[str] = None
     items: Optional[List[str]] = None
     demeanor: Optional[str] = None
+    alien_id: str = field(
+        default_factory=lambda: "".join(
+            [np.random.choice(list(string.ascii_letters)) for i in range(32)]
+        )
+    )
+
+    def __post_init__(self):
+        self.populate_information()
 
     def generate_information(self):
-        var_desc = (
-            "This alien should look like they have some malicous intent"
-            if not self.let_in
-            else "This alien should look like they do not have any malicious intent"
-        )
-        prompt = f"Generate information about an alien who should {'not' if not self.let_in else ''} be let into this club."
+        prompt = f"Generate information about an alien named {self.name} who should {'not' if not self.let_in else ''} be let into this club."
         messages = client.chat.completions.create(
             messages=[
                 {
@@ -75,21 +114,22 @@ class Alien:
         information = json.loads(self.generate_information())
 
         self.description = information["text-to-image"]
-        self.name = information["name"]
         self.species = information["species"]
         self.items = information["items"]
         self.demeanor = information["demeanor"]
 
     def __str__(self):
-        def convert(obj):
-            if isinstance(obj, np.ndarray):
-                return f"np.ndarray with shape {obj.shape}"
-            return obj
-
-        serializable_dict = dataclasses.asdict(
-            self, dict_factory=lambda items: {k: convert(v) for k, v in items}
-        )
-        return json.dumps(serializable_dict, indent=4)
+        tmp = {
+            "let_in": self.let_in,
+            "image_url": self.image_url,
+            "description": self.description,
+            "name": self.name,
+            "species": self.species,
+            "items": self.items,
+            "demeanor": self.demeanor,
+            "alien_id": self.alien_id,
+        }
+        return json.dumps(tmp)
 
     def generate_art(self):
         if self.description is None:
@@ -105,11 +145,10 @@ class Alien:
         )
 
         res = requests.get(response.data[0].url)
-        image = Image.open(io.BytesIO(res.content))
-        self.art = np.array(image)
+        return Image.open(io.BytesIO(res.content))
 
 
 if __name__ == "__main__":
     a = Alien()
-    a.generate_art()
-    print(a.to_json())
+    print(a)
+    a.generate_art().show()
